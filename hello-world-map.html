@@ -1,0 +1,129 @@
+<script src="data.js" type="text/javascript" charset="utf-8"></script>
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../google-map/google-map.html">
+<link rel="import" href="../google-map/google-map-marker.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icons/maps-icons.html">
+<link rel="import" href="../iron-icons/hardware-icons.html">
+<link rel="import" href="../iron-icons/editor-icons.html">
+<dom-module id="hello-world-map">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-family: Roboto, Noto, sans-serif;
+      }
+
+      google-map {
+        height: 100%;
+        width: 100%;
+        min-height: 600px;
+        min-width: 800px;
+      }
+
+    </style>
+    <google-map id="map" latitude="42.3314" longitude="-83.0458" api-key="AIzaSyC1CDBNg7s1GsX1LDt_hXQ9kEdiR4k96nU"></google-map>
+  </template>
+
+  <script>
+    /**
+     * `hello-world-map`
+     * 
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class HelloWorldMap extends Polymer.Element {
+      static get is() { return 'hello-world-map'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'hello-world-map'
+          }
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.$.map.addEventListener('google-map-ready', this.loadMap());
+      }
+
+      loadMap() {
+          var map = this.$.map;
+          map.clickEvents = true;
+
+          map.addEventListener('map-marker-select', function(event) {
+              map.childNodes.forEach(function(e){
+                  if(e.open && e.storeId != event.detail.storeId) { e.open=false; }
+              })
+          });
+
+          map.addEventListener('google-map-click', function(){
+              map.childNodes.forEach(function(e){ e.open = false; })
+          });
+
+          data.forEach(function(e){
+              map.appendChild(this.createMarker(e));
+          }, this);
+
+      }
+
+        createMarker(e) {
+            var marker = document.createElement('google-map-marker');
+            marker.storeId = e.storeId;
+            marker.latitude = e.lat;
+            marker.longitude = e.lng;
+            marker.title = e.name;
+            marker.icon = "/components/hello-world-map/new-marker.png"
+            marker.addEventListener('google-map-marker-open', function(){
+                this.fire('map-marker-select', {storeId: e.storeId});
+            });
+            marker.innerHTML = this.createInnerHTML(e);
+            return marker;
+        }
+
+        createInnerHTML(e) {
+            return this.buildTitle(e)
+                + this.buildLabels(e)
+                + this.buildAddress(e)
+                + this.buildPhone(e)
+                + this.buildOptions(e);
+        }
+
+        buildTitle(e) {
+            return '<h1>' + e.name + '</h1>';
+        }
+
+        buildLabels(e) {
+            return '<div>' + e.labels + '</div>';
+        }
+
+        buildAddress(e) {
+            return '<div style="font-size: small">' + e.address + ' ' + e.city + '<div>'
+        }
+
+        buildPhone(e) {
+            return '</div>' + this.formatPhone(e.phone) +  '</div>';
+        }
+
+        formatPhone(s) {
+            if (s == null || s.length < 7) { return ' '}
+            var s2 = (""+s).replace(/\D/g, '');
+            var m = s2.match(/^(\d{3})(\d{3})(\d{4})$/);
+            return (!m) ? null : "(" + m[1] + ") " + m[2] + "-" + m[3];
+        }
+
+        buildOptions(e) {
+            var s = '<paper-icon-button icon="maps:directions"></paper-icon-button>';
+            s += '<paper-icon-button icon="editor:insert-comment"></paper-icon-button>';
+            return s;
+        }
+
+    }
+
+    window.customElements.define(HelloWorldMap.is, HelloWorldMap);
+  </script>
+</dom-module>
